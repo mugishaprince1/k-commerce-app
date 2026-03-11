@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-COMMERCE APP</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #6366f1; --secondary: #a855f7; --momo: #ffcc00; --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.7); --text: #f8fafc; --border: rgba(255, 255, 255, 0.1);
+            --danger: #ef4444; --success: #22c55e;
+        }
+
+        .light-mode {
+            --bg: #f1f5f9; --text: #0f172a; --card: #ffffff; --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: 0.3s ease; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+        /* SPLASH SCREEN */
+        #splash-screen { position: fixed; inset: 0; background: #0f172a; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; transition: 0.5s; }
+        .splash-circle { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(45deg, var(--primary), var(--secondary)); display: flex; justify-content: center; align-items: center; animation: pulse 1.5s infinite; box-shadow: 0 0 30px var(--primary); }
+        .splash-circle b { font-size: 40px; color: white; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+
+        /* AUTH OVERLAY */
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9500; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .auth-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 25px; width: 100%; max-width: 380px; text-align: center; backdrop-filter: blur(10px); }
+        .auth-input { width: 100%; padding: 15px; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text); outline: none; text-align: center; }
+        .auth-btn { width: 100%; padding: 15px; margin-top: 20px; border-radius: 12px; border: none; background: var(--primary); color: white; font-weight: 800; cursor: pointer; }
+
+        /* ADVANCED SETTINGS PANEL */
+        #settings-panel, #cart-panel { position: fixed; inset: 0; background: var(--bg); z-index: 9000; display: none; flex-direction: column; padding: 25px 5%; overflow-y: auto; }
+        
+        .profile-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 25px; border-radius: 25px; margin-bottom: 25px; color: white; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; font-size: 24px; border: 2px solid white; }
+        
+        .settings-group { margin-bottom: 20px; }
+        .group-title { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; padding-left: 5px; }
+        .settings-item { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .item-info { display: flex; align-items: center; gap: 12px; }
+
+        /* HEADER & NAV */
+        header { padding: 15px 5%; position: sticky; top: 0; background: var(--bg); backdrop-filter: blur(15px); z-index: 1000; border-bottom: 1px solid var(--border); }
+        .logo { font-weight: 800; font-size: 22px; }
+        .logo span { color: var(--primary); }
+        .search-nav { background: rgba(100,100,100,0.1); border: 1px solid var(--border); padding: 12px 18px; border-radius: 15px; display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+        .search-nav input { background: none; border: none; color: var(--text); width: 100%; outline: none; }
+
+        /* FULL MENU CATEGORIES */
+        .menu-container { display: flex; gap: 10px; overflow-x: auto; padding: 15px 5%; scrollbar-width: none; }
+        .menu-item { background: var(--card); border: 1px solid var(--border); padding: 10px 20px; border-radius: 12px; white-space: nowrap; font-size: 13px; cursor: pointer; color: #94a3b8; }
+        .menu-item.active { background: var(--primary); color: white; font-weight: bold; }
+
+        /* PRODUCT GRID */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding: 15px 5% 120px 5%; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 12px; display: flex; flex-direction: column; position: relative; }
+        .card img { width: 100%; height: 130px; object-fit: contain; background: white; border-radius: 15px; margin-bottom: 10px; }
+        .card h4 { font-size: 13px; margin-bottom: 5px; height: 34px; overflow: hidden; }
+        .card p { color: var(--primary); font-weight: 800; margin-bottom: 10px; }
+
+        /* SWITCH */
+        .switch { position: relative; width: 40px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background: #444; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background: var(--primary); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        #notif-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 11000; pointer-events: none; }
+        .notif { background: var(--success); color: white; padding: 12px 25px; border-radius: 50px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: slideDown 0.4s ease; }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: var(--card); border: 1px solid var(--border); border-radius: 25px; display: flex; justify-content: space-around; padding: 15px; backdrop-filter: blur(20px); z-index: 8000; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .nav-btn { color: #94a3b8; font-size: 20px; cursor: pointer; position: relative; }
+        .badge { position: absolute; top: -8px; right: -12px; background: var(--danger); color: white; font-size: 10px; padding: 2px 7px; border-radius: 10px; border: 2px solid var(--bg); }
+    </style>
+</head>
+<body>
+
+    <div id="notif-container"></div>
+    <div id="splash-screen"><div class="splash-circle"><b>K</b></div></div>
+
+    <div id="auth-overlay">
+        <div class="auth-card" id="reg-step">
+            <h2>K-COMMERCE</h2>
+            <input type="text" id="reg-name" class="auth-input" placeholder="Enter Full Name">
+            <button class="auth-btn" onclick="sendOTP()">CONTINUE</button>
+        </div>
+        <div class="auth-card" id="otp-step" style="display: none;">
+            <h2>Verify Code</h2>
+            <p id="otp-hint" style="font-size:12px; color:#94a3b8; margin: 10px 0"></p>
+            <input type="number" id="otp-input" class="auth-input" placeholder="0 0 0 0" style="letter-spacing: 10px; font-weight: bold;">
+            <button class="auth-btn" onclick="verifyOTP()">LOGIN</button>
+        </div>
+    </div>
+
+    <div id="settings-panel">
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px">
+            <i class="fa-solid fa-chevron-left" onclick="closeSettings()"></i>
+            <h2>Settings</h2>
+        </div>
+
+        <div class="profile-section">
+            <div class="avatar"><i class="fa-solid fa-user"></i></div>
+            <div>
+                <h3 id="user-settings-name">Guest</h3>
+                <p style="font-size:11px; opacity:0.8">Premium Member</p>
+            </div>
+            <i class="fa-solid fa-pen-to-square" style="margin-left:auto; opacity:0.5"></i>
+        </div>
+
+        <div class="settings-group">
+            <p class="group-title">App Preferences</p>
+            <div class="settings-item">
+                <div class="item-info"><i class="fa-solid fa-moon"></i> <span>Dark Mode</span></div>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <div class="item-info"><i class="fa-solid fa-bell"></i> <span>Notifications</span></div>
+                <i class="fa-solid fa-chevron-right" style="font-size:12px; opacity:0.3"></i>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <p class="group-title">Support & Info</p>
+            <div class="settings-item" onclick="window.open('https://wa.me/250780000000')">
+                <div class="item-info"><i class="fa-solid fa-headset"></i> <span>Support (WhatsApp)</span></div>
+                <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:12px; opacity:0.3"></i>
+            </div>
+            <div class="settings-item">
+                <div class="item-info"><i class="fa-solid fa-circle-info"></i> <span>App Version 2.5</span></div>
+                <span style="font-size:10px; opacity:0.5">Updated</span>
+            </div>
+        </div>
+
+        <button onclick="signOut()" style="width:100%; padding:15px; border-radius:15px; border:1px solid var(--danger); background:none; color:var(--danger); font-weight:800; margin-top:10px">
+            LOGOUT
+        </button>
+    </div>
+
+    <div id="cart-panel">
+        <div id="cart-content-wrapper" style="height: 100%; display: flex; flex-direction: column;">
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px">
+                <i class="fa-solid fa-arrow-left" onclick="toggleCart(false)"></i>
+                <h2>My Cart</h2>
+            </div>
+            <div id="cart-items-list" style="flex:1"></div>
+            <div id="cart-footer" style="padding:20px; background:rgba(255,255,255,0.05); border-radius:20px">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px">
+                    <span style="color:#94a3b8">Total:</span>
+                    <h3 id="total-price">0 RWF</h3>
+                </div>
+                <button class="auth-btn" style="background:var(--momo); color:black" onclick="processMomo()">
+                    <i class="fa-solid fa-mobile-screen-button"></i> PAY WITH MOMO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div style="display:flex; justify-content:space-between; align-items:center">
+            <div class="logo">K-<span>COMMERCE</span></div>
+            <div id="user-display" style="font-size:12px; font-weight:800; color:var(--primary)"></div>
+        </div>
+        <div class="search-nav">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-input" placeholder="Search for products..." oninput="filterProducts()">
+        </div>
+    </header>
+
+    <div class="menu-container" id="category-bar">
+        <div class="menu-item active" onclick="load('all', this)">All</div>
+        <div class="menu-item" onclick="load('smartphones', this)">Phones</div>
+        <div class="menu-item" onclick="load('laptops', this)">Laptops</div>
+        <div class="menu-item" onclick="load('fragrances', this)">Perfumes</div>
+        <div class="menu-item" onclick="load('beauty', this)">Skincare</div>
+        <div class="menu-item" onclick="load('groceries', this)">Groceries</div>
+        <div class="menu-item" onclick="load('home-decoration', this)">Home Decor</div>
+        <div class="menu-item" onclick="load('furniture', this)">Furniture</div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+
+    <div class="bottom-nav">
+        <div class="nav-btn" onclick="location.reload()"><i class="fa-solid fa-house"></i></div>
+        <div class="nav-btn" onclick="toggleCart(true)">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="badge" id="count">0</span>
+        </div>
+        <div class="nav-btn" onclick="openSettings()"><i class="fa-solid fa-gear"></i></div>
+    </div>
+
+    <script>
+        let dCode = "";
+        let cart = JSON.parse(localStorage.getItem('k_cart')) || [];
+        let allItems = [];
+
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.opacity = '0';
+                setTimeout(() => { document.getElementById('splash-screen').style.display = 'none'; checkAuth(); }, 500);
+            }, 1500);
+            updateCount();
+        };
+
+        function checkAuth() {
+            const user = localStorage.getItem('k_user');
+            if(!user) { document.getElementById('auth-overlay').style.display = 'flex'; }
+            else {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('user-display').innerText = user.split(' ')[0];
+                document.getElementById('user-settings-name').innerText = user;
+                load('all', document.querySelector('.menu-item'));
+            }
+        }
+
+        function sendOTP() {
+            const name = document.getElementById('reg-name').value;
+            if(name.length < 3) return alert("Enter name!");
+            dCode = Math.floor(1000 + Math.random() * 9000).toString();
+            alert("MOMO CODE: " + dCode);
+            document.getElementById('reg-step').style.display = 'none';
+            document.getElementById('otp-step').style.display = 'block';
+            document.getElementById('otp-hint').innerText = "Code is " + dCode;
+        }
+
+        function verifyOTP() {
+            if(document.getElementById('otp-input').value === dCode) {
+                localStorage.setItem('k_user', document.getElementById('reg-name').value);
+                location.reload();
+            } else { alert("Wrong code!"); }
+        }
+
+        function openSettings() { document.getElementById('settings-panel').style.display = 'flex'; }
+        function closeSettings() { document.getElementById('settings-panel').style.display = 'none'; }
+        function toggleTheme() { document.body.classList.toggle('light-mode'); }
+        function toggleCart(s) { document.getElementById('cart-panel').style.display = s ? 'flex' : 'none'; if(s) renderCart(); }
+
+        async function load(cat, el) {
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            if(el) el.classList.add('active');
+            const grid = document.getElementById('grid');
+            grid.innerHTML = "<p style='grid-column: 1/-1; text-align:center; padding:50px;'>Loading products...</p>";
+            try {
+                const url = cat === 'all' ? 'https://dummyjson.com/products?limit=30' : `https://dummyjson.com/products/category/${cat}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if(!data.products || data.products.length === 0) {
+                    grid.innerHTML = "<p style='grid-column: 1/-1; text-align:center; padding:50px;'>No products found.</p>";
+                    return;
+                }
+                
+                allItems = data.products;
+                displayProducts(allItems);
+            } catch (e) { 
+                grid.innerHTML = "<p style='grid-column: 1/-1; text-align:center; padding:50px;'>Check connection!</p>"; 
+            }
+        }
+
+        function displayProducts(products) {
+            document.getElementById('grid').innerHTML = products.map(p => `
+                <div class="card">
+                    <img src="${p.thumbnail}">
+                    <h4>${p.title}</h4>
+                    <p>${(p.price * 1350).toLocaleString()} RWF</p>
+                    <button class="auth-btn" style="padding:8px; font-size:10px" onclick="addToCart('${p.title}', ${p.price*1350})">ADD TO CART</button>
+                </div>
+            `).join('');
+        }
+
+        function filterProducts() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            displayProducts(allItems.filter(p => p.title.toLowerCase().includes(term)));
+        }
+
+        function addToCart(t, p) {
+            cart.push({t, p, id: Date.now()});
+            localStorage.setItem('k_cart', JSON.stringify(cart));
+            updateCount();
+            showNotif("Added!");
+        }
+
+        function updateCount() { document.getElementById('count').innerText = cart.length; }
+
+        function renderCart() {
+            const list = document.getElementById('cart-items-list');
+            let total = 0;
+            if(cart.length === 0) {
+                list.innerHTML = `<p style="text-align:center; padding:50px; opacity:0.5">Empty</p>`;
+                document.getElementById('total-price').innerText = "0 RWF";
+                return;
+            }
+            list.innerHTML = cart.map((item, i) => {
+                total += item.p;
+                return `<div class="settings-item"><span>${item.t}</span><i class="fa-solid fa-trash" style="color:var(--danger)" onclick="removeItem(${i})"></i></div>`;
+            }).join('');
+            document.getElementById('total-price').innerText = total.toLocaleString() + " RWF";
+        }
+
+        function removeItem(i) {
+            cart.splice(i, 1);
+            localStorage.setItem('k_cart', JSON.stringify(cart));
+            updateCount(); renderCart();
+        }
+
+        function processMomo() {
+            if(cart.length === 0) return alert("Cart empty!");
+            let total = 0; cart.forEach(item => total += item.p);
+            const phone = prompt("MTN MoMo\nAmount: " + total.toLocaleString() + " RWF\nEnter Number:");
+            if (!phone || phone.length < 10) return alert("Invalid Number!");
+
+            const wrapper = document.getElementById('cart-content-wrapper');
+            wrapper.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:50px; color:var(--primary)"></i>
+                <h2 style="margin-top:20px">Initiating...</h2>
+                <p style="opacity:0.5">Pushing request to ${phone}</p>
+            </div>`;
+
+            setTimeout(() => {
+                wrapper.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:20px">
+                    <i class="fa-solid fa-mobile-screen" style="font-size:60px; color:var(--momo)"></i>
+                    <h2 style="margin-top:20px">Approve PIN</h2>
+                    <p>Enter MoMo PIN on your phone to pay <b>${total.toLocaleString()} RWF</b></p>
+                </div>`;
+            }, 3000);
+
+            setTimeout(() => {
+                wrapper.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center">
+                    <div style="width:70px; height:70px; background:var(--success); border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:20px">
+                        <i class="fa-solid fa-check" style="color:white; font-size:35px"></i>
+                    </div>
+                    <h2 style="color:var(--success)">Success!</h2>
+                    <p style="opacity:0.5">Order Placed Successfully</p>
+                    <button class="auth-btn" onclick="location.reload()">FINISH</button>
+                </div>`;
+                cart = []; localStorage.setItem('k_cart', "[]");
+            }, 8000);
+        }
+
+        function showNotif(msg) {
+            const div = document.createElement('div');
+            div.className = 'notif'; div.innerHTML = `✓ ${msg}`;
+            document.getElementById('notif-container').appendChild(div);
+            setTimeout(() => div.remove(), 2500);
+        }
+
+        function signOut() { localStorage.clear(); location.reload(); }
+    </script>
+</body>
+</html>
